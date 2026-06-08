@@ -21,6 +21,7 @@ public partial class JsonEditorView : UserControl
     private List<SearchMatch> _searchMatches = new();
     private int _searchCurrentIndex = -1;
     private bool _suppressTextChange;
+    private bool _editorReady; // set after Loaded completes; guards events that fire during InitializeComponent
 
     public JsonEditorView()
     {
@@ -52,6 +53,7 @@ public partial class JsonEditorView : UserControl
         }
 
         DataContextChanged += OnDataContextChanged;
+        _editorReady = true;
     }
 
     private void OnDataContextChanged(object sender, DependencyPropertyChangedEventArgs e)
@@ -84,7 +86,7 @@ public partial class JsonEditorView : UserControl
 
     private void Editor_TextChanged(object? sender, EventArgs e)
     {
-        if (_suppressTextChange) return;
+        if (!_editorReady || _suppressTextChange) return;
         if (Tab is { } tab)
         {
             tab.Content = Editor.Text;
@@ -97,6 +99,7 @@ public partial class JsonEditorView : UserControl
 
     private void Caret_PositionChanged(object? sender, EventArgs e)
     {
+        if (!_editorReady) return;
         if (Tab is { } tab)
         {
             tab.CaretOffset = Editor.CaretOffset;
@@ -190,6 +193,7 @@ public partial class JsonEditorView : UserControl
 
     private void RunSearch()
     {
+        if (!_editorReady) return;
         string query = SearchBox.Text;
         if (string.IsNullOrEmpty(query))
         {
