@@ -1,0 +1,114 @@
+<UserControl x:Class="HayViewer.JsonEditorView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:av="clr-namespace:ICSharpCode.AvalonEdit;assembly=ICSharpCode.AvalonEdit"
+             xmlns:conv="clr-namespace:HayViewer.Converters"
+             AllowDrop="True"
+             Drop="UserControl_Drop"
+             Loaded="UserControl_Loaded">
+
+    <UserControl.Resources>
+        <conv:BoolToVisibilityConverter x:Key="BoolToVis"/>
+    </UserControl.Resources>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- Search bar (collapsed by default; shown by Ctrl+F) -->
+        <Border Grid.Row="0" x:Name="SearchBar" Visibility="Collapsed"
+                Background="#F6F8FA" BorderBrush="#D0D7DE" BorderThickness="0,0,0,1"
+                Padding="8,4">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="90"/>
+                    <ColumnDefinition Width="30"/>
+                    <ColumnDefinition Width="30"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="28"/>
+                </Grid.ColumnDefinitions>
+
+                <TextBox Grid.Column="0" x:Name="SearchBox"
+                         Margin="0,0,6,0" Padding="3,2"
+                         VerticalContentAlignment="Center"
+                         KeyDown="SearchBox_KeyDown"
+                         TextChanged="SearchBox_TextChanged"/>
+
+                <ComboBox Grid.Column="1" x:Name="ScopeCombo" Margin="0,0,6,0"
+                          SelectedIndex="0"
+                          SelectionChanged="ScopeCombo_SelectionChanged">
+                    <ComboBoxItem Content="Both"/>
+                    <ComboBoxItem Content="Keys"/>
+                    <ComboBoxItem Content="Values"/>
+                </ComboBox>
+
+                <ToggleButton Grid.Column="2" x:Name="CaseSensitiveBtn" Content="Aa"
+                              Width="26" ToolTip="Case sensitive"
+                              Checked="SearchOptions_Changed" Unchecked="SearchOptions_Changed"/>
+
+                <ToggleButton Grid.Column="3" x:Name="RegexBtn" Content=".*"
+                              Width="26" Margin="2,0,6,0" ToolTip="Regular expression"
+                              Checked="SearchOptions_Changed" Unchecked="SearchOptions_Changed"/>
+
+                <TextBlock Grid.Column="4" x:Name="MatchCounter"
+                           VerticalAlignment="Center" Foreground="#57606A"
+                           Margin="0,0,8,0" Text="No results"/>
+
+                <Button Grid.Column="5" Content="✕" BorderThickness="0"
+                        Background="Transparent" ToolTip="Close search (Esc)"
+                        Click="CloseSearch_Click"/>
+            </Grid>
+        </Border>
+
+        <!-- Tree + editor split view -->
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="280" MinWidth="80" x:Name="TreeColumn"/>
+                <ColumnDefinition Width="4"/>
+                <ColumnDefinition Width="*" MinWidth="200"/>
+            </Grid.ColumnDefinitions>
+
+            <TreeView Grid.Column="0" x:Name="JsonTree"
+                      BorderThickness="0,0,1,0"
+                      SelectedItemChanged="JsonTree_SelectedItemChanged"
+                      FontFamily="Consolas" FontSize="12"
+                      VirtualizingPanel.IsVirtualizing="True"
+                      VirtualizingPanel.VirtualizationMode="Recycling">
+                <TreeView.ItemContainerStyle>
+                    <Style TargetType="TreeViewItem">
+                        <Setter Property="IsExpanded" Value="{Binding IsExpanded, Mode=TwoWay}"/>
+                        <Setter Property="Padding" Value="2,1"/>
+                    </Style>
+                </TreeView.ItemContainerStyle>
+                <TreeView.ItemTemplate>
+                    <HierarchicalDataTemplate
+                        ItemsSource="{Binding Children}">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="{Binding Icon}" FontSize="9"
+                                       Foreground="#8B949E" Margin="0,0,3,0"
+                                       VerticalAlignment="Center"/>
+                            <TextBlock Text="{Binding DisplayText}"
+                                       TextTrimming="CharacterEllipsis" MaxWidth="280"/>
+                        </StackPanel>
+                    </HierarchicalDataTemplate>
+                </TreeView.ItemTemplate>
+            </TreeView>
+
+            <GridSplitter Grid.Column="1" Width="4" HorizontalAlignment="Stretch"
+                          Background="#D0D7DE" Cursor="SizeWE"
+                          DragCompleted="Splitter_DragCompleted"/>
+
+            <av:TextEditor Grid.Column="2"
+                           x:Name="Editor"
+                           FontFamily="Consolas"
+                           FontSize="13"
+                           ShowLineNumbers="True"
+                           WordWrap="False"
+                           HorizontalScrollBarVisibility="Auto"
+                           VerticalScrollBarVisibility="Auto"/>
+        </Grid>
+    </Grid>
+</UserControl>

@@ -1,0 +1,19 @@
+# Build outputs
+bin/
+obj/
+publish/
+
+# Visual Studio
+.vs/
+*.user
+*.suo
+*.sdf
+
+# NuGet
+packages/
+*.nupkg
+project.lock.json
+
+# OS
+.DS_Store
+Thumbs.db

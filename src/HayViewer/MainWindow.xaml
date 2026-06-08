@@ -1,0 +1,138 @@
+<Window x:Class="HayViewer.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="clr-namespace:HayViewer.ViewModels"
+        xmlns:local="clr-namespace:HayViewer"
+        Title="Hay Viewer"
+        Width="1200" Height="800"
+        MinWidth="800" MinHeight="500"
+        AllowDrop="True"
+        Drop="Window_Drop"
+        Closing="Window_Closing"
+        Loaded="Window_Loaded">
+
+    <Window.InputBindings>
+        <KeyBinding Key="O" Modifiers="Ctrl" Command="{Binding OpenCommand}"/>
+        <KeyBinding Key="S" Modifiers="Ctrl" Command="{Binding SaveCommand}"/>
+        <KeyBinding Key="S" Modifiers="Ctrl+Shift" Command="{Binding SaveAsCommand}"/>
+        <KeyBinding Key="F" Modifiers="Ctrl" Command="{Binding FindCommand}"/>
+        <KeyBinding Key="F" Modifiers="Ctrl+Shift" Command="{Binding FormatCommand}"/>
+        <KeyBinding Key="M" Modifiers="Ctrl" Command="{Binding MinifyCommand}"/>
+        <KeyBinding Key="T" Modifiers="Ctrl+Shift" Command="{Binding NewTabCommand}"/>
+        <KeyBinding Key="F3" Command="{Binding FindNextCommand}"/>
+        <KeyBinding Key="F3" Modifiers="Shift" Command="{Binding FindPrevCommand}"/>
+    </Window.InputBindings>
+
+    <DockPanel>
+        <!-- Menu bar -->
+        <Menu DockPanel.Dock="Top">
+            <MenuItem Header="_File">
+                <MenuItem Header="_New Tab" Command="{Binding NewTabCommand}" InputGestureText="Ctrl+Shift+T"/>
+                <MenuItem Header="_Open…" Command="{Binding OpenCommand}" InputGestureText="Ctrl+O"/>
+                <Separator/>
+                <MenuItem Header="_Save" Command="{Binding SaveCommand}" InputGestureText="Ctrl+S"/>
+                <MenuItem Header="Save _As…" Command="{Binding SaveAsCommand}" InputGestureText="Ctrl+Shift+S"/>
+                <Separator/>
+                <MenuItem Header="Recent _Files" x:Name="RecentFilesMenu"/>
+                <Separator/>
+                <MenuItem Header="New _Window" Command="{Binding NewWindowCommand}"/>
+                <Separator/>
+                <MenuItem Header="E_xit" Command="{Binding ExitCommand}"/>
+            </MenuItem>
+            <MenuItem Header="_Edit">
+                <MenuItem Header="_Format JSON" Command="{Binding FormatCommand}" InputGestureText="Ctrl+Shift+F"/>
+                <MenuItem Header="_Minify JSON" Command="{Binding MinifyCommand}" InputGestureText="Ctrl+M"/>
+                <MenuItem Header="_Validate JSON" Command="{Binding ValidateCommand}"/>
+                <Separator/>
+                <MenuItem Header="Indent: 2 Spaces" Command="{Binding SetIndentCommand}" CommandParameter="2"/>
+                <MenuItem Header="Indent: 4 Spaces" Command="{Binding SetIndentCommand}" CommandParameter="4"/>
+                <MenuItem Header="Indent: Tab" Command="{Binding SetIndentCommand}" CommandParameter="tab"/>
+            </MenuItem>
+            <MenuItem Header="_View">
+                <MenuItem Header="_Find" Command="{Binding FindCommand}" InputGestureText="Ctrl+F"/>
+                <Separator/>
+                <MenuItem Header="Refresh Tree" Command="{Binding RefreshTreeCommand}"/>
+                <MenuItem Header="_Word Wrap" x:Name="WordWrapMenu" IsCheckable="True"
+                          Click="WordWrapMenu_Click"/>
+                <Separator/>
+                <MenuItem Header="_Toggle Theme" Command="{Binding ToggleThemeCommand}"/>
+            </MenuItem>
+            <MenuItem Header="_Help">
+                <MenuItem Header="_About Hay Viewer" Command="{Binding AboutCommand}"/>
+            </MenuItem>
+        </Menu>
+
+        <!-- Toolbar -->
+        <ToolBar DockPanel.Dock="Top" ToolBarTray.IsLocked="True">
+            <Button Command="{Binding OpenCommand}" ToolTip="Open file (Ctrl+O)" Content="Open"/>
+            <Button Command="{Binding SaveCommand}" ToolTip="Save (Ctrl+S)" Content="Save"/>
+            <Separator/>
+            <Button Command="{Binding FormatCommand}" ToolTip="Format/Beautify JSON (Ctrl+Shift+F)" Content="Format"/>
+            <Button Command="{Binding MinifyCommand}" ToolTip="Minify JSON (Ctrl+M)" Content="Minify"/>
+            <Button Command="{Binding ValidateCommand}" ToolTip="Validate JSON" Content="Validate"/>
+            <Separator/>
+            <ComboBox x:Name="IndentCombo" Width="90" ToolTip="Indentation style"
+                      SelectionChanged="IndentCombo_SelectionChanged" SelectedIndex="0">
+                <ComboBoxItem Content="2 Spaces"/>
+                <ComboBoxItem Content="4 Spaces"/>
+                <ComboBoxItem Content="Tab"/>
+            </ComboBox>
+            <Separator/>
+            <Button Command="{Binding ToggleThemeCommand}" x:Name="ThemeBtn"
+                    Content="Toggle Theme" ToolTip="Toggle light/dark theme"/>
+            <Separator/>
+            <Button Command="{Binding NewWindowCommand}" Content="New Window" ToolTip="Open a new window"/>
+        </ToolBar>
+
+        <!-- Status bar -->
+        <StatusBar DockPanel.Dock="Bottom">
+            <StatusBarItem>
+                <TextBlock x:Name="StatusPosition" Text="Ln 1, Col 1" MinWidth="90"/>
+            </StatusBarItem>
+            <Separator/>
+            <StatusBarItem>
+                <TextBlock x:Name="StatusSize" Text="0 B" MinWidth="60"/>
+            </StatusBarItem>
+            <Separator/>
+            <StatusBarItem>
+                <TextBlock x:Name="StatusValid" Text="" MinWidth="120"/>
+            </StatusBarItem>
+            <Separator/>
+            <StatusBarItem>
+                <TextBlock x:Name="StatusNodes" Text=""/>
+            </StatusBarItem>
+        </StatusBar>
+
+        <!-- Tab control (fills remaining space) -->
+        <TabControl x:Name="MainTabControl" ItemsSource="{Binding Tabs}"
+                    SelectedItem="{Binding SelectedTab, Mode=TwoWay}"
+                    SelectionChanged="MainTabControl_SelectionChanged">
+            <TabControl.ItemTemplate>
+                <DataTemplate DataType="{x:Type vm:EditorTabViewModel}">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="{Binding Title}" VerticalAlignment="Center"
+                                   Margin="0,0,4,0" MaxWidth="200"
+                                   TextTrimming="CharacterEllipsis"/>
+                        <Button Content="x"
+                                Width="16" Height="16" Padding="0"
+                                FontSize="9"
+                                BorderThickness="0"
+                                Background="Transparent"
+                                Foreground="#8B949E"
+                                Cursor="Hand"
+                                VerticalAlignment="Center"
+                                Command="{Binding DataContext.CloseTabCommand,
+                                    RelativeSource={RelativeSource AncestorType=TabControl}}"
+                                CommandParameter="{Binding}"
+                                ToolTip="Close tab"/>
+                    </StackPanel>
+                </DataTemplate>
+            </TabControl.ItemTemplate>
+            <TabControl.ContentTemplate>
+                <DataTemplate DataType="{x:Type vm:EditorTabViewModel}">
+                    <local:JsonEditorView DataContext="{Binding}"/>
+                </DataTemplate>
+            </TabControl.ContentTemplate>
+        </TabControl>
+    </DockPanel>
+</Window>
