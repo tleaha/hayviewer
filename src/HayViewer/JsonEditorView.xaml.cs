@@ -306,25 +306,40 @@ public partial class JsonEditorView : UserControl
     }
 
     // ─── Tree context menu ────────────────────────────────────────────────────
+    // ContextMenu is built in code to avoid a WPF XAML compiler bug where
+    // Click handlers inside a Style Setter.Value get mis-wired to the wrong element.
+
+    private ContextMenu? _treeContextMenu;
+    private JsonNodeModel? _contextMenuNode;
+
+    private ContextMenu BuildTreeContextMenu()
+    {
+        var menu      = new ContextMenu();
+        var copyValue = new MenuItem { Header = "Copy Value" };
+        var copyKey   = new MenuItem { Header = "Copy Key" };
+        var copyPath  = new MenuItem { Header = "Copy Path" };
+        copyValue.Click += CopyValue_Click;
+        copyKey.Click   += CopyKey_Click;
+        copyPath.Click  += CopyPath_Click;
+        menu.Items.Add(copyValue);
+        menu.Items.Add(copyKey);
+        menu.Items.Add(new Separator());
+        menu.Items.Add(copyPath);
+        return menu;
+    }
 
     private void TreeItem_PreviewRightClick(object sender, MouseButtonEventArgs e)
     {
-        if (sender is TreeViewItem item) item.IsSelected = true;
-    }
-
-    private static JsonNodeModel? GetContextNode(object sender)
-    {
-        if (sender is MenuItem mi &&
-            mi.Parent is ContextMenu cm &&
-            cm.PlacementTarget is FrameworkElement fe &&
-            fe.DataContext is JsonNodeModel node)
-            return node;
-        return null;
+        if (sender is not TreeViewItem item) return;
+        item.IsSelected = true;
+        _contextMenuNode = item.DataContext as JsonNodeModel;
+        _treeContextMenu ??= BuildTreeContextMenu();
+        item.ContextMenu = _treeContextMenu;
     }
 
     private void CopyValue_Click(object sender, RoutedEventArgs e)
     {
-        if (GetContextNode(sender) is not { } node) return;
+        if (_contextMenuNode is not { } node) return;
         string text = node.Kind switch
         {
             JsonNodeKind.String or JsonNodeKind.Number
@@ -338,13 +353,13 @@ public partial class JsonEditorView : UserControl
 
     private void CopyKey_Click(object sender, RoutedEventArgs e)
     {
-        if (GetContextNode(sender) is { Key: { } key })
+        if (_contextMenuNode is { Key: { } key })
             Clipboard.SetText(key);
     }
 
     private void CopyPath_Click(object sender, RoutedEventArgs e)
     {
-        if (GetContextNode(sender) is { } node)
+        if (_contextMenuNode is { } node)
             Clipboard.SetText(node.JsonPath);
     }
 

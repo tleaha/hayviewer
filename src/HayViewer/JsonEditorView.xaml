@@ -82,16 +82,6 @@
                         <EventSetter Event="PreviewMouseRightButtonDown" Handler="TreeItem_PreviewRightClick"/>
                         <Setter Property="IsExpanded" Value="{Binding IsExpanded, Mode=TwoWay}"/>
                         <Setter Property="Padding" Value="2,1"/>
-                        <Setter Property="ContextMenu">
-                            <Setter.Value>
-                                <ContextMenu>
-                                    <MenuItem Header="Copy Value" Click="CopyValue_Click"/>
-                                    <MenuItem Header="Copy Key"   Click="CopyKey_Click"/>
-                                    <Separator/>
-                                    <MenuItem Header="Copy Path"  Click="CopyPath_Click"/>
-                                </ContextMenu>
-                            </Setter.Value>
-                        </Setter>
                     </Style>
                 </TreeView.ItemContainerStyle>
                 <TreeView.ItemTemplate>
