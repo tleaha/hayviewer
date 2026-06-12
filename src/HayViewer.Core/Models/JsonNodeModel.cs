@@ -11,6 +11,30 @@ public class JsonNodeModel
     public int TextOffset { get; init; }
     public List<JsonNodeModel> Children { get; } = new();
     public bool IsExpanded { get; set; } = true;
+    public JsonNodeModel? Parent { get; set; }
+
+    public string JsonPath
+    {
+        get
+        {
+            var segments = new List<string>();
+            var node = this;
+            while (node.Parent != null)
+            {
+                if (node.Key != null)
+                    segments.Add($".{node.Key}");
+                else
+                {
+                    int idx = node.Parent.Children.IndexOf(node);
+                    segments.Add($"[{idx}]");
+                }
+                node = node.Parent;
+            }
+            if (node.Key != null) segments.Add($".{node.Key}");
+            segments.Reverse();
+            return "$" + string.Concat(segments);
+        }
+    }
 
     public string Icon => Kind switch
     {

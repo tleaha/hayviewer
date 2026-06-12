@@ -305,6 +305,49 @@ public partial class JsonEditorView : UserControl
         }
     }
 
+    // ─── Tree context menu ────────────────────────────────────────────────────
+
+    private void TreeItem_PreviewRightClick(object sender, MouseButtonEventArgs e)
+    {
+        if (sender is TreeViewItem item) item.IsSelected = true;
+    }
+
+    private static JsonNodeModel? GetContextNode(object sender)
+    {
+        if (sender is MenuItem mi &&
+            mi.Parent is ContextMenu cm &&
+            cm.PlacementTarget is FrameworkElement fe &&
+            fe.DataContext is JsonNodeModel node)
+            return node;
+        return null;
+    }
+
+    private void CopyValue_Click(object sender, RoutedEventArgs e)
+    {
+        if (GetContextNode(sender) is not { } node) return;
+        string text = node.Kind switch
+        {
+            JsonNodeKind.String or JsonNodeKind.Number
+                or JsonNodeKind.Boolean or JsonNodeKind.Null => node.ValueText ?? "",
+            JsonNodeKind.Object => $"{{{node.Children.Count} items}}",
+            JsonNodeKind.Array  => $"[{node.Children.Count} items]",
+            _                   => ""
+        };
+        if (text.Length > 0) Clipboard.SetText(text);
+    }
+
+    private void CopyKey_Click(object sender, RoutedEventArgs e)
+    {
+        if (GetContextNode(sender) is { Key: { } key })
+            Clipboard.SetText(key);
+    }
+
+    private void CopyPath_Click(object sender, RoutedEventArgs e)
+    {
+        if (GetContextNode(sender) is { } node)
+            Clipboard.SetText(node.JsonPath);
+    }
+
     // ─── Public helpers called from MainWindow ────────────────────────────────
 
     public void SetText(string text)

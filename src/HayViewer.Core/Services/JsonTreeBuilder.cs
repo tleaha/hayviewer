@@ -49,7 +49,7 @@ public class JsonTreeBuilder
                     if (reader.Read())
                     {
                         var child = ParseCurrent(ref reader, propKey, lineStarts, bytes);
-                        if (child is not null) node.Children.Add(child);
+                        if (child is not null) { child.Parent = node; node.Children.Add(child); }
                     }
                 }
                 return node;
@@ -61,7 +61,7 @@ public class JsonTreeBuilder
                 while (reader.Read() && reader.TokenType != JsonTokenType.EndArray)
                 {
                     var child = ParseCurrent(ref reader, null, lineStarts, bytes);
-                    if (child is not null) node.Children.Add(child);
+                    if (child is not null) { child.Parent = node; node.Children.Add(child); }
                 }
                 return node;
             }
